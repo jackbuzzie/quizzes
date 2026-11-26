@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Northern Beaches Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f2ea; --surface:#ffffff; --surface-2:#f3eee4;
+  --border:rgba(30,40,45,.10); --border-strong:rgba(30,40,45,.18);
+  --text:#2b3338; --muted:#7f878b;
+  --theme:#2b8fa3; --theme-soft:rgba(43,143,163,.18);
+  --correct:#2f9e63; --correct-soft:#e7f4ec; --miss:#d2544a; --miss-soft:#fbe9e7;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Public Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(rgba(30,40,45,.045) 1px,transparent 1px);background-size:22px 22px;pointer-events:none;z-index:0;}
+.app{position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr;min-height:100vh;}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 28px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(12px);position:sticky;top:0;z-index:10;}
+.header-left{display:flex;align-items:center;gap:14px;}
+.back{text-decoration:none;color:var(--text);display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:var(--surface);border:1px solid var(--border);font-weight:bold;font-size:1.1em;box-shadow:0 2px 8px rgba(30,40,45,.06);transition:transform .2s;}
+.back:hover{transform:translateX(-2px);}
+.logo-icon{width:38px;height:38px;background:linear-gradient(180deg,#8fd3e0 0%,#2b8fa3 55%,#e8d3a6 56%);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.15em;flex-shrink:0;box-shadow:0 2px 10px rgba(30,40,45,.12);}
+h1{font-size:1.15em;font-weight:800;letter-spacing:-.3px;}
+.subtitle{font-size:.75em;color:var(--muted);font-weight:500;margin-top:1px;}
+.timer-label{font-size:.62em;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;text-align:right;}
+.timer{font-family:'DM Mono',monospace;font-size:1.7em;font-weight:500;letter-spacing:2px;line-height:1;text-align:right;}
+.main{display:grid;grid-template-columns:290px 1fr;min-height:0;}
+.left-panel{border-right:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:16px;background:rgba(255,255,255,.55);position:sticky;top:67px;align-self:start;max-height:calc(100vh - 67px);overflow-y:auto;}
+.panel-label{font-size:.64em;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+input[type=text]{width:100%;padding:11px 14px;font-size:.95em;font-family:'Public Sans',sans-serif;font-weight:500;background:var(--surface);border:1.5px solid var(--border-strong);border-radius:9px;color:var(--text);transition:border-color .2s,box-shadow .2s;}
+input[type=text]::placeholder{color:var(--muted);}
+input[type=text]:focus{outline:none;border-color:var(--theme);box-shadow:0 0 0 3px var(--theme-soft);}
+input[type=text]:disabled{opacity:.45;cursor:not-allowed;}
+.feedback{font-size:.82em;font-weight:600;padding:9px 12px;border-radius:7px;display:none;line-height:1.4;margin-top:8px;}
+.feedback.show{display:block;}
+.feedback.correct{background:var(--correct-soft);color:var(--correct);border:1px solid rgba(47,158,99,.25);}
+.feedback.incorrect{background:var(--miss-soft);color:var(--miss);border:1px solid rgba(210,84,74,.25);}
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.score-card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px;text-align:center;}
+.score-card-label{font-size:.62em;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.score-card-num{font-family:'DM Mono',monospace;font-size:1.7em;font-weight:500;line-height:1;}
+.score-card.hints{grid-column:span 2;background:#f8f1dd;border-color:rgba(195,154,46,.25);}
+.score-card.hints *{color:#a37f1e;}
+.next-box{background:var(--surface);border:1px dashed var(--border-strong);border-radius:9px;padding:10px 12px;font-size:.78em;color:var(--muted);line-height:1.45;}
+.next-box b{color:var(--text);font-family:'DM Mono',monospace;}
+.summaries{display:flex;flex-direction:column;gap:5px;}
+.summary{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;}
+.summary-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;background:var(--accent);}
+.summary-name{font-size:.74em;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.summary-count,.summary-timer{font-family:'DM Mono',monospace;font-size:.7em;color:var(--muted);}
+.summary-timer{min-width:34px;text-align:right;}
+.summary.done{border-color:rgba(47,158,99,.3);background:var(--correct-soft);}
+.summary.done .summary-name,.summary.done .summary-timer{color:var(--correct);}
+.btn-group{display:flex;flex-direction:column;gap:7px;}
+.btn{width:100%;padding:10px 16px;font-family:'Public Sans',sans-serif;font-size:.8em;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:none;border-radius:8px;cursor:pointer;transition:all .2s;}
+.btn-primary{background:var(--theme);color:#fff;}
+.btn-primary:hover:not(:disabled){filter:brightness(.92);transform:translateY(-1px);}
+.btn-primary:disabled{opacity:.3;cursor:not-allowed;}
+.btn-secondary{background:transparent;color:var(--muted);border:1.5px solid var(--border-strong);}
+.btn-secondary:hover{color:var(--text);border-color:var(--muted);}
+.btn-danger{background:transparent;color:var(--miss);border:1.5px solid rgba(210,84,74,.35);}
+.btn-danger:hover{background:var(--miss-soft);}
+.legend{font-size:.72em;line-height:1.5;color:var(--muted);padding-top:10px;border-top:1px solid var(--border);}
+.legend b{color:var(--text);}
+.right-panel{padding:22px 24px 60px;}
+.route-head{display:flex;align-items:center;gap:10px;font-size:.72em;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.route-head .arrow{flex:1;height:2px;background:linear-gradient(90deg,var(--theme),var(--theme-soft));border-radius:2px;position:relative;}
+.route-head .arrow::after{content:'';position:absolute;right:-2px;top:-4px;border:5px solid transparent;border-left:7px solid var(--theme-soft);}
+.groups{display:flex;flex-direction:column;gap:18px;}
+.group-card{display:flex;flex-direction:column;gap:11px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(30,40,45,.04);}
+.group-header{display:flex;align-items:center;gap:11px;}
+.group-badge{min-width:38px;height:38px;padding:0 8px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75em;color:#fff;background:var(--accent);}
+.group-info{flex:1;min-width:0;}
+.group-title{font-size:.98em;font-weight:800;line-height:1.1;}
+.group-meta{font-family:'DM Mono',monospace;font-size:.66em;color:var(--muted);margin-top:3px;}
+.group-timer{font-family:'DM Mono',monospace;font-size:.82em;color:var(--muted);}
+.group-timer.done{color:var(--correct);}
+.progress-bar{height:4px;border-radius:3px;background:rgba(30,40,45,.07);overflow:hidden;}
+.progress-fill{height:100%;width:0;border-radius:3px;background:var(--accent);transition:width .4s ease;}
+.tags{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.tag{position:relative;min-width:140px;height:40px;padding:6px 10px 6px 30px;border-radius:8px;font-size:.8em;font-weight:500;background:var(--surface-2);border:1.5px solid var(--border);color:transparent;user-select:none;display:flex;align-items:center;justify-content:center;text-align:center;transition:background .25s,border-color .25s,color .25s;}
+.tag.off{border-style:dashed;border-color:var(--border-strong);}
+.tag .num{position:absolute;left:7px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:.78em;color:var(--muted);min-width:16px;text-align:center;}
+.tag .txt{white-space:nowrap;color:inherit;}
+.tag:not(.hinted):not(.guessed):not(.missed) .txt{display:none;}
+.tag.hinted{color:var(--muted);border-color:var(--border-strong);}
+.tag.hinted .txt{font-family:'DM Mono',monospace;letter-spacing:1.2px;}
+.tag.guessed{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:700;}
+.tag.guessed .num{color:var(--accent);}
+.tag.missed{background:var(--miss-soft);border-color:rgba(210,84,74,.45);color:var(--miss);}
+.tag.missed .num{color:var(--miss);}
+.tag-sep{color:var(--border-strong);font-size:.9em;}
+.hint-btn{position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid var(--border-strong);color:var(--muted);font-size:9px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s,background .15s,transform .1s;z-index:3;padding:0;box-shadow:0 1px 3px rgba(30,40,45,.15);}
+.tag:hover .hint-btn{opacity:1;}
+.hint-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff;transform:scale(1.15);}
+.tag.hinted .hint-btn{opacity:.4;}
+.tag.guessed .hint-btn,.tag.missed .hint-btn{display:none;}
+@keyframes pop{0%{transform:scale(.85);opacity:0}60%{transform:scale(1.07)}100%{transform:scale(1);opacity:1}}
+.tag.new{animation:pop .3s ease-out;}
+.modal{display:none;position:fixed;inset:0;background:rgba(30,40,45,.45);backdrop-filter:blur(6px);z-index:100;align-items:center;justify-content:center;padding:20px;}
+.modal.active{display:flex;}
+#reopenResults{display:none;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:60;font-family:'Public Sans',sans-serif;font-weight:700;font-size:.82em;color:#fff;background:var(--theme);border:none;border-radius:99px;padding:11px 22px;cursor:pointer;box-shadow:0 2px 10px rgba(30,40,45,.2);}
+#reopenResults.show{display:block;}
+.modal-content{background:var(--surface);padding:38px 42px;border-radius:18px;text-align:center;max-width:460px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px rgba(30,40,45,.2);animation:scaleIn .25s ease-out;}
+.modal-content h2{font-size:1.5em;font-weight:800;margin-bottom:8px;}
+.modal-sub{font-size:.85em;color:var(--muted);margin-bottom:18px;}
+.final-score{font-family:'DM Mono',monospace;font-size:2.8em;color:var(--theme);margin:10px 0;line-height:1;}
+.final-message{margin-bottom:22px;}
+.final-breakdown{display:flex;flex-direction:column;gap:6px;margin-bottom:24px;text-align:left;}
+.final-row{display:flex;align-items:center;gap:10px;background:var(--surface-2);border-radius:8px;padding:8px 12px;}
+.final-dot{width:8px;height:8px;border-radius:50%;}
+.final-name{font-size:.78em;font-weight:600;flex:1;}
+.final-stat{font-family:'DM Mono',monospace;font-size:.76em;color:var(--muted);}
+.final-stat.complete{color:var(--correct);}
+@keyframes scaleIn{from{opacity:0;transform:scale(.93) translateY(10px)}to{opacity:1;transform:none}}
+.start-overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;}
+.start-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:42px 46px;text-align:center;max-width:460px;box-shadow:0 20px 50px rgba(30,40,45,.18);animation:scaleIn .3s ease-out;}
+.start-card h2{font-size:1.5em;font-weight:800;margin-bottom:10px;}
+.start-card p{font-size:.86em;color:var(--muted);line-height:1.6;margin-bottom:22px;}
+.dots{display:flex;justify-content:center;gap:6px;margin-bottom:24px;}
+.dots div{width:14px;height:14px;border-radius:50%;}
+@media(max-width:880px){
+  header{padding:12px 16px;}
+  .main{grid-template-columns:1fr;}
+  .left-panel{position:sticky;top:63px;border-right:none;border-bottom:1px solid var(--border);max-height:none;gap:12px;background:color-mix(in srgb,var(--bg) 95%,transparent);z-index:9;}
+  .summaries,.lbl-groups,.legend,.next-box{display:none;}
+  .right-panel{padding:16px 14px 50px;}
+  .timer{font-size:1.4em;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="header-left">
+    <a href="index.html" class="back" title="Back to Arcade Home">←</a>
+    <div class="logo-icon">🌊</div>
+    <div><h1>Northern Beaches Quiz</h1><div class="subtitle">North → South</div></div>
+  </div>
+  <div><div class="timer-label">Elapsed</div><div class="timer" id="globalTimer">0:00</div></div>
+</header>
+<div class="main">
+  <div class="left-panel">
+    <div>
+      <div class="panel-label">Name a beach</div>
+      <input type="text" id="guessInput" placeholder="Type a beach…" autocomplete="off">
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <div>
+      <div class="panel-label">Score</div>
+      <div class="score-grid">
+        <div class="score-card"><div class="score-card-label">Found</div><div class="score-card-num" id="totalScore">0</div></div>
+        <div class="score-card"><div class="score-card-label">Left</div><div class="score-card-num" id="remaining">0</div></div>
+        <div class="score-card hints"><div class="score-card-label">Hints Used</div><div class="score-card-num" id="hintCount">0</div></div>
+      </div>
+    </div>
+    <div class="next-box" id="nextBox"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary" id="submitBtn">Submit</button>
+      <button class="btn btn-danger" id="giveUpBtn">Give Up &amp; Reveal</button>
+      <button class="btn btn-secondary" id="resetBtn">Reset Quiz</button>
+    </div>
+    <div class="legend">Beaches are numbered north → south along the ocean coast. You can leave off the word "Beach". Hover a tile and press <b>?</b> for a hint.</div>
+  </div>
+  <div class="right-panel">
+    <div class="route-head"><span>North</span><div class="arrow"></div><span>South</span></div>
+    <div class="groups" id="groups"></div>
+  </div>
+</div>
+</div>
+
+<div class="start-overlay" id="startOverlay">
+  <div class="start-card">
+    <h2>🌊 Ready to hit the coast?</h2>
+    <p>Name every major Northern Beaches ocean beach, from the top of the peninsula down to the harbour. Guess in any order; the board fills in from north to south. The clock starts when you do.</p>
+    <button class="btn btn-primary" id="startBtn" style="padding:13px;font-size:.9em">Start Quiz</button>
+  </div>
+</div>
+
+<div class="modal" id="endModal">
+  <div class="modal-content">
+    <h2 id="modalTitle">Game Over</h2>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="final-score" id="finalScore">0</div>
+    <div class="final-message" id="finalMessage"></div>
+    <div class="final-breakdown" id="finalBreakdown"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="location.reload()" style="padding:12px">Play Again</button>
+      <button class="btn btn-secondary" id="viewBoardBtn" style="padding:12px">View the Board</button>
+    </div>
+  </div>
+</div>
+<button id="reopenResults">Show Results</button>
+
+<script>
+const CONFIG = {
+ "dropWords": [
+  "beach"
+ ],
+ "wrongMsg": "✗ Not a beach in this game",
+ "giveUpConfirm": "Give up and reveal every remaining beach?",
+ "winTitle": "🏄 Every beach, Palm to Manly!",
+ "messages": [
+  [
+   100,
+   "Palm Beach to Manly, every patch of sand. True local."
+  ],
+  [
+   85,
+   "Nearly the whole coastline. Barely a beach missed."
+  ],
+  [
+   65,
+   "Good swim, a few beaches drifted past."
+  ],
+  [
+   40,
+   "Solid effort. The little ones between the headlands are tricky."
+  ],
+  [
+   0,
+   "Time for a coastal drive — give it another go!"
+  ]
+ ],
+ "groups": [
+  {
+   "key": "all",
+   "name": "Ocean Beaches",
+   "badge": "",
+   "meta": "north → south",
+   "accent": "#2b8fa3",
+   "accentSoft": "#e1f2f5",
+   "items": [
+    "Palm Beach",
+    "Whale Beach",
+    "Avalon Beach",
+    {
+     "name": "Bilgola Beach",
+     "aliases": [
+      "Bilgola Plateau"
+     ]
+    },
+    "Newport Beach",
+    "Bungan Beach",
+    "Mona Vale Beach",
+    "Warriewood Beach",
+    "Turimetta Beach",
+    "North Narrabeen Beach",
+    {
+     "name": "Narrabeen Beach",
+     "aliases": [
+      "South Narrabeen"
+     ]
+    },
+    "Collaroy Beach",
+    {
+     "name": "Long Reef Beach",
+     "aliases": [
+      "Longreef"
+     ]
+    },
+    {
+     "name": "Dee Why Beach",
+     "aliases": [
+      "Dy",
+      "Deewhy"
+     ]
+    },
+    "North Curl Curl Beach",
+    {
+     "name": "South Curl Curl Beach",
+     "aliases": [
+      "Curl Curl"
+     ]
+    },
+    {
+     "name": "Freshwater Beach",
+     "aliases": [
+      "Harbord"
+     ]
+    },
+    "Queenscliff Beach",
+    "North Steyne Beach",
+    {
+     "name": "Manly Beach",
+     "aliases": [
+      "South Steyne"
+     ]
+    }
+   ]
+  }
+ ]
+};
+const groups = CONFIG.groups;
+
+// ── Forgiving matcher ──
+const normalize = s => {
+  let n = s.toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+  n = n.replace(/^mt /,'mount ').replace(/ mt /g,' mount ');
+  (CONFIG.dropWords||[]).forEach(w => { n = n.replace(new RegExp('(^| )'+w+'( |$)','g'),' ').trim(); });
+  return n.replace(/\s+/g,' ').trim();
+};
+const squash = s => s.replace(/ /g,'');
+
+const items = [];
+let seq = 0;
+groups.forEach(g => g.items.forEach(it => {
+  const obj = typeof it === 'string' ? {name: it} : it;
+  const keys = [obj.name, ...(obj.aliases||[])].map(normalize).map(squash);
+  items.push({ id: ++seq, group: g.key, name: obj.name, off: !!obj.off, keys });
+}));
+const TOTAL = items.length;
+const byId = Object.fromEntries(items.map(i => [i.id, i]));
+
+let guessed = new Set(), gameActive = false, gameStarted = false, globalSeconds = 0, totalHints = 0;
+const groupSeconds = {}, groupDone = {}, hintState = {};
+groups.forEach(g => { groupSeconds[g.key] = 0; groupDone[g.key] = false; });
+const fmt = s => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+
+function hintText(name, level){
+  const reveal = Math.max(0, level-1); let i = 0;
+  return Array.from(name).map(c => /[a-z0-9]/i.test(c) ? (i++ < reveal ? c : '_') : c).join('');
+}
+function useHint(id, tag){
+  if (!gameActive || guessed.has(id)) return;
+  const it = byId[id];
+  const max = 1 + Array.from(it.name).filter(c => /[a-z0-9]/i.test(c)).length;
+  if ((hintState[id]||0) >= max) return;
+  hintState[id] = (hintState[id]||0) + 1;
+  totalHints++;
+  document.getElementById('hintCount').textContent = totalHints;
+  tag.querySelector('.txt').textContent = hintText(it.name, hintState[id]);
+  tag.classList.add('hinted');
+}
+
+function buildBoard(){
+  const wrap = document.getElementById('groups');
+  groups.forEach(g => {
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    card.style.setProperty('--accent', g.accent); card.style.setProperty('--accent-soft', g.accentSoft);
+    card.innerHTML = `<div class="group-header"><div class="group-info"><div class="group-title">${g.name}</div><div class="group-meta"><span id="hc-${g.key}">0</span>/${g.items.length} · ${g.meta}</div></div><div class="group-timer" id="gt-${g.key}">0:00</div></div><div class="progress-bar"><div class="progress-fill" id="bar-${g.key}"></div></div><div class="tags" id="tags-${g.key}"></div>`;
+    wrap.appendChild(card);
+    const tags = card.querySelector('.tags');
+    items.filter(i => i.group === g.key).forEach((it, idx) => {
+      if (idx > 0) { const sep = document.createElement('span'); sep.className = 'tag-sep'; sep.textContent = '›'; tags.appendChild(sep); }
+      const tag = document.createElement('div');
+      tag.className = 'tag' + (it.off ? ' off' : '');
+      tag.dataset.id = it.id;
+      tag.innerHTML = `<span class="num">${it.id}</span><span class="txt">${it.name}</span>`;
+      const hb = document.createElement('button');
+      hb.className = 'hint-btn'; hb.type = 'button'; hb.title = 'Reveal a letter'; hb.textContent = '?';
+      hb.addEventListener('click', e => { e.stopPropagation(); useHint(it.id, tag); });
+      tag.appendChild(hb);
+      tags.appendChild(tag);
+    });
+  });
+}
+
+function updateProgress(){
+  groups.forEach(g => {
+    const list = items.filter(i => i.group === g.key);
+    const c = list.filter(i => guessed.has(i.id)).length;
+    document.getElementById(`hc-${g.key}`).textContent = c;
+    document.getElementById(`bar-${g.key}`).style.width = (c/list.length*100) + '%';
+    if (!groupDone[g.key] && c === list.length) {
+      groupDone[g.key] = true;
+      document.getElementById(`gt-${g.key}`).classList.add('done');
+    }
+  });
+  document.getElementById('totalScore').textContent = guessed.size;
+  document.getElementById('remaining').textContent = TOTAL - guessed.size;
+  const next = items.find(i => !guessed.has(i.id));
+  document.getElementById('nextBox').innerHTML = next
+    ? `First gap in the sequence: <b>#${next.id}</b>` + (next.id > 1 ? ` (after ${byId[next.id-1].name})` : '')
+    : 'Every one found — start to finish!';
+}
+
+function submitGuess(){
+  if (!gameActive) return;
+  const input = document.getElementById('guessInput'), fb = document.getElementById('feedback');
+  const raw = input.value.trim(); if (!raw) return;
+  const g = squash(normalize(raw));
+  const match = items.find(i => i.keys.includes(g));
+  if (match && guessed.has(match.id)) {
+    fb.className = 'feedback show incorrect'; fb.textContent = `✓ Already found ${match.name}!`;
+  } else if (match) {
+    guessed.add(match.id);
+    const tag = document.querySelector(`.tag[data-id="${match.id}"]`);
+    tag.querySelector('.txt').textContent = match.name;
+    tag.classList.remove('hinted'); tag.classList.add('guessed','new');
+    setTimeout(() => tag.classList.remove('new'), 400);
+    fb.className = 'feedback show correct';
+    fb.textContent = `✓ #${match.id} ${match.name}`;
+    updateProgress();
+    if (guessed.size === TOTAL) endGame(true);
+  } else {
+    fb.className = 'feedback show incorrect'; fb.textContent = CONFIG.wrongMsg;
+  }
+  input.value = ''; input.focus();
+}
+
+setInterval(() => {
+  if (!gameStarted || !gameActive) return;
+  globalSeconds++;
+  document.getElementById('globalTimer').textContent = fmt(globalSeconds);
+  groups.forEach(g => {
+    if (groupDone[g.key]) return;
+    groupSeconds[g.key]++;
+    document.getElementById(`gt-${g.key}`).textContent = fmt(groupSeconds[g.key]);
+  });
+}, 1000);
+
+function startGame(){
+  gameStarted = gameActive = true;
+  document.getElementById('startOverlay').style.display = 'none';
+  const input = document.getElementById('guessInput');
+  input.disabled = false; document.getElementById('submitBtn').disabled = false; input.focus();
+}
+function giveUp(){ if (gameActive && confirm(CONFIG.giveUpConfirm)) endGame(false); }
+function endGame(completed){
+  gameActive = false;
+  document.getElementById('guessInput').disabled = true;
+  document.getElementById('submitBtn').disabled = true;
+  document.querySelectorAll('.tag').forEach(tag => {
+    if (tag.classList.contains('guessed')) return;
+    tag.querySelector('.txt').textContent = byId[tag.dataset.id].name;
+    tag.classList.remove('hinted'); tag.classList.add('missed');
+  });
+  const pct = Math.round(guessed.size/TOTAL*100);
+  document.getElementById('modalTitle').textContent = completed ? CONFIG.winTitle : 'Game Over';
+  document.getElementById('modalSub').textContent = `${fmt(globalSeconds)} · ${totalHints} hint${totalHints !== 1 ? 's' : ''} used`;
+  document.getElementById('finalScore').textContent = `${guessed.size} / ${TOTAL}`;
+  document.getElementById('finalMessage').textContent = CONFIG.messages.find(m => pct >= m[0])[1];
+  const bd = document.getElementById('finalBreakdown'); bd.innerHTML = '';
+  if (groups.length > 1) groups.forEach(g => {
+    const list = items.filter(i => i.group === g.key), c = list.filter(i => guessed.has(i.id)).length;
+    const row = document.createElement('div'); row.className = 'final-row';
+    row.innerHTML = `<div class="final-dot" style="background:${g.accent}"></div><div class="final-name">${g.name}</div><div class="final-stat ${groupDone[g.key] ? 'complete' : ''}">${groupDone[g.key] ? '✓ ' + fmt(groupSeconds[g.key]) : c + '/' + list.length}</div>`;
+    bd.appendChild(row);
+  });
+  document.getElementById('endModal').classList.add('active');
+}
+
+buildBoard(); updateProgress();
+document.getElementById('guessInput').disabled = true;
+document.getElementById('submitBtn').disabled = true;
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('submitBtn').addEventListener('click', submitGuess);
+document.getElementById('guessInput').addEventListener('keypress', e => { if (e.key === 'Enter') submitGuess(); });
+document.getElementById('giveUpBtn').addEventListener('click', giveUp);
+document.getElementById('viewBoardBtn').addEventListener('click', () => { document.getElementById('endModal').classList.remove('active'); document.getElementById('reopenResults').classList.add('show'); });
+document.getElementById('reopenResults').addEventListener('click', () => { document.getElementById('reopenResults').classList.remove('show'); document.getElementById('endModal').classList.add('active'); });
+document.getElementById('resetBtn').addEventListener('click', () => { if (confirm('Reset? Your progress will be lost.')) location.reload(); });
+</script>
+</body>
+</html>

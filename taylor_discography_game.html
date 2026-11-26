@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taylor Swift Discography Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg: #faf7f2;
+        --surface: #ffffff;
+        --surface-2: #f3efe7;
+        --border: rgba(40,30,20,0.10);
+        --border-strong: rgba(40,30,20,0.18);
+        --text: #2c2a2e;
+        --muted: #9a948c;
+        --correct: #2f9e63;
+        --correct-soft: #e7f4ec;
+        --miss: #d2544a;
+        --miss-soft: #fbe9e7;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: 'Figtree', sans-serif;
+        background: var(--bg);
+        min-height: 100vh;
+        color: var(--text);
+        overflow-x: hidden;
+    }
+
+    /* Soft dotted background */
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image: radial-gradient(rgba(40,30,20,0.045) 1px, transparent 1px);
+        background-size: 22px 22px;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .app {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 28px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(250,247,242,0.85);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 14px; }
+
+    .logo-icon {
+        width: 38px; height: 38px;
+        background: conic-gradient(from 210deg, #e07ba8, #c39a2e, #4753a6, #4a9d6b, #c8392b, #e07ba8);
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.15em; flex-shrink: 0;
+        box-shadow: 0 2px 10px rgba(40,30,20,0.12);
+    }
+
+    h1 {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.15em; font-weight: 800;
+        letter-spacing: -0.3px; color: var(--text);
+    }
+
+    .subtitle { font-size: 0.75em; color: var(--muted); font-weight: 500; margin-top: 1px; }
+
+    .header-right { display: flex; align-items: center; gap: 20px; }
+    .global-timer-wrap { text-align: right; }
+    .global-timer-label {
+        font-size: 0.62em; font-weight: 700; color: var(--muted);
+        letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .global-timer {
+        font-family: 'DM Mono', monospace; font-size: 1.7em; font-weight: 500;
+        color: var(--text); letter-spacing: 2px; line-height: 1;
+    }
+
+    /* ── MAIN ── */
+    .main { display: grid; grid-template-columns: 290px 1fr; gap: 0; min-height: 0; }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+        border-right: 1px solid var(--border);
+        padding: 20px;
+        display: flex; flex-direction: column; gap: 16px;
+        background: rgba(255,255,255,0.55);
+        position: sticky; top: 67px;
+        align-self: start;
+        max-height: calc(100vh - 67px);
+        overflow-y: auto;
+    }
+
+    .panel-label {
+        font-size: 0.64em; font-weight: 700; letter-spacing: 0.1em;
+        text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+    }
+
+    input[type="text"] {
+        width: 100%; padding: 11px 14px; font-size: 0.95em;
+        font-family: 'Figtree', sans-serif; font-weight: 500;
+        background: var(--surface); border: 1.5px solid var(--border-strong);
+        border-radius: 9px; color: var(--text);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type="text"]::placeholder { color: var(--muted); }
+    input[type="text"]:focus {
+        outline: none; border-color: #b89a6a;
+        box-shadow: 0 0 0 3px rgba(184,154,106,0.18);
+    }
+    input[type="text"]:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .feedback {
+        font-size: 0.82em; font-weight: 600; padding: 9px 12px;
+        border-radius: 7px; display: none; line-height: 1.4;
+    }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--correct-soft); color: var(--correct); border: 1px solid rgba(47,158,99,0.25); }
+    .feedback.incorrect { background: var(--miss-soft); color: var(--miss); border: 1px solid rgba(210,84,74,0.25); }
+
+    /* Score cards */
+    .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .score-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 9px; padding: 12px; text-align: center;
+    }
+    .score-card-label {
+        font-size: 0.62em; font-weight: 700; letter-spacing: 0.08em;
+        text-transform: uppercase; color: var(--muted); margin-bottom: 4px;
+    }
+    .score-card-num { font-family: 'DM Mono', monospace; font-size: 1.7em; font-weight: 500; color: var(--text); line-height: 1; }
+
+    /* Album summaries */
+    .album-summaries { display: flex; flex-direction: column; gap: 5px; }
+    .album-summary {
+        display: flex; align-items: center; gap: 9px;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 8px; padding: 7px 10px;
+    }
+    .summary-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: var(--accent); }
+    .summary-name { font-size: 0.74em; font-weight: 600; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .summary-count { font-family: 'DM Mono', monospace; font-size: 0.72em; font-weight: 500; color: var(--muted); }
+    .summary-timer { font-family: 'DM Mono', monospace; font-size: 0.68em; color: var(--muted); min-width: 34px; text-align: right; }
+    .album-summary.done { border-color: rgba(47,158,99,0.3); background: var(--correct-soft); }
+    .album-summary.done .summary-name { color: var(--correct); }
+    .album-summary.done .summary-timer { color: var(--correct); }
+
+    /* Buttons */
+    .btn-group { display: flex; flex-direction: column; gap: 7px; }
+    .btn {
+        width: 100%; padding: 10px 16px; font-family: 'Figtree', sans-serif;
+        font-size: 0.8em; font-weight: 700; letter-spacing: 0.04em;
+        text-transform: uppercase; border: none; border-radius: 8px;
+        cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--text); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #444047; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-secondary { background: transparent; color: var(--muted); border: 1.5px solid var(--border-strong); }
+    .btn-secondary:hover { border-color: #b0a99e; color: var(--text); }
+    .btn-danger { background: transparent; color: var(--miss); border: 1.5px solid rgba(210,84,74,0.35); }
+    .btn-danger:hover { background: var(--miss-soft); border-color: rgba(210,84,74,0.6); }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel { padding: 22px 24px 60px; position: relative; }
+    .albums-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+        gap: 18px;
+        align-items: start;
+    }
+
+    /* ── ALBUM CARD ── */
+    .album-card {
+        display: flex; flex-direction: column; gap: 11px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        box-shadow: 0 1px 3px rgba(40,30,20,0.04);
+    }
+
+    .album-header { display: flex; align-items: center; gap: 11px; }
+    .album-badge {
+        min-width: 38px; height: 38px; padding: 0 8px;
+        border-radius: 9px; display: flex; align-items: center; justify-content: center;
+        font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.72em;
+        color: #fff; flex-shrink: 0; background: var(--accent);
+        letter-spacing: 0.02em;
+    }
+    .album-header-info { flex: 1; min-width: 0; }
+    .album-title { font-family: 'Syne', sans-serif; font-size: 0.98em; font-weight: 800; color: var(--text); line-height: 1.05; }
+    .album-meta { font-family: 'DM Mono', monospace; font-size: 0.66em; color: var(--muted); margin-top: 3px; }
+    .album-timer { font-family: 'DM Mono', monospace; font-size: 0.82em; font-weight: 500; color: var(--muted); text-align: right; flex-shrink: 0; }
+    .album-timer.done { color: var(--correct); }
+
+    .progress-bar { height: 4px; border-radius: 3px; background: rgba(40,30,20,0.07); overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 3px; width: 0%; background: var(--accent); transition: width 0.4s ease; }
+
+    /* Song tags */
+    .songs-list { display: flex; flex-wrap: wrap; gap: 7px; }
+    .song-tag {
+        position: relative;
+        width: 132px; height: 36px;
+        box-sizing: border-box;
+        padding: 6px 9px;
+        border-radius: 7px;
+        font-size: 0.76em; font-weight: 500;
+        background: var(--surface-2);
+        border: 1.5px solid var(--border);
+        color: transparent;
+        overflow: hidden;
+        user-select: none;
+        display: flex; align-items: center; justify-content: center;
+        text-align: center; line-height: 1.25;
+        transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+    }
+    .song-text { color: inherit; white-space: nowrap; }
+
+    /* Any revealed state grows to fit + wraps */
+    .song-tag.hinted, .song-tag.guessed, .song-tag.missed {
+        width: auto; max-width: 100%; height: auto; min-height: 36px;
+        overflow: visible;
+    }
+    .song-tag.hinted .song-text,
+    .song-tag.guessed .song-text,
+    .song-tag.missed .song-text { white-space: normal; }
+
+    /* Hinted */
+    .song-tag.hinted { color: var(--muted); border-color: var(--border-strong); }
+    .song-tag.hinted .song-text { font-family: 'DM Mono', monospace; letter-spacing: 1.2px; font-size: 0.95em; }
+
+    /* Guessed (era-colored) */
+    .song-tag.guessed {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 600;
+    }
+    .song-tag.guessed .song-text { font-family: 'Figtree', sans-serif; letter-spacing: normal; font-size: 1em; }
+
+    /* Missed */
+    .song-tag.missed {
+        background: var(--miss-soft);
+        border-color: rgba(210,84,74,0.45);
+        color: var(--miss);
+    }
+    .song-tag.missed .song-text { font-family: 'Figtree', sans-serif; letter-spacing: normal; font-size: 1em; }
+
+    /* Hint button */
+    .hint-btn {
+        position: absolute; top: -7px; right: -7px;
+        width: 18px; height: 18px; border-radius: 50%;
+        background: #fff; border: 1px solid var(--border-strong);
+        color: var(--muted); font-size: 9px; font-weight: 800;
+        font-family: 'Figtree', sans-serif; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; transition: opacity 0.15s, background 0.15s, transform 0.1s, color 0.15s;
+        z-index: 3; padding: 0; line-height: 1;
+        box-shadow: 0 1px 3px rgba(40,30,20,0.15);
+    }
+    .song-tag:hover .hint-btn { opacity: 1; }
+    .hint-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; transform: scale(1.15); }
+    .song-tag.hinted .hint-btn { opacity: 0.4; }
+    .song-tag.hinted:hover .hint-btn { opacity: 1; }
+    .song-tag.guessed .hint-btn, .song-tag.missed .hint-btn { display: none; }
+
+    @keyframes pop { 0% { transform: scale(0.85); opacity: 0; } 60% { transform: scale(1.07); } 100% { transform: scale(1); opacity: 1; } }
+    .song-tag.guessed.new { animation: pop 0.3s ease-out forwards; }
+
+    /* ── MODAL ── */
+    .modal {
+        display: none; position: fixed; inset: 0;
+        background: rgba(44,42,46,0.45); backdrop-filter: blur(6px);
+        z-index: 100; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+        background: var(--surface); border: 1px solid var(--border);
+        padding: 38px 42px; border-radius: 18px; text-align: center;
+        max-width: 460px; width: 100%;
+        max-height: 88vh; overflow-y: auto;
+        box-shadow: 0 20px 50px rgba(40,30,20,0.2);
+        animation: scaleIn 0.25s ease-out;
+    }
+    .modal-content h2 { font-family: 'Syne', sans-serif; font-size: 1.6em; color: var(--text); margin-bottom: 8px; }
+    .modal-sub { font-size: 0.85em; color: var(--muted); margin-bottom: 22px; }
+    .final-score { font-family: 'DM Mono', monospace; font-size: 2.8em; font-weight: 500; color: #c39a2e; margin: 14px 0; line-height: 1; }
+    .final-message { font-size: 1em; color: var(--text); margin-bottom: 24px; }
+    .final-breakdown { display: flex; flex-direction: column; gap: 6px; margin-bottom: 26px; text-align: left; }
+    .final-row { display: flex; align-items: center; gap: 10px; background: var(--surface-2); border-radius: 8px; padding: 8px 12px; }
+    .final-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .final-name { font-size: 0.78em; font-weight: 600; color: var(--text); flex: 1; }
+    .final-stat { font-family: 'DM Mono', monospace; font-size: 0.76em; color: var(--muted); }
+    .final-stat.complete { color: var(--correct); }
+
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.93) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+    /* ── START OVERLAY ── */
+    .start-overlay {
+        position: fixed; inset: 0;
+        background: rgba(250,247,242,0.78); backdrop-filter: blur(5px);
+        display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px;
+    }
+    .start-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 18px; padding: 42px 46px; text-align: center; max-width: 440px;
+        box-shadow: 0 20px 50px rgba(40,30,20,0.18);
+        animation: scaleIn 0.3s ease-out;
+    }
+    .start-card h2 { font-family: 'Syne', sans-serif; font-size: 1.5em; margin-bottom: 10px; }
+    .start-card p { font-size: 0.86em; color: var(--muted); line-height: 1.6; margin-bottom: 22px; }
+    .era-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 24px; }
+    .era-dot { width: 14px; height: 14px; border-radius: 50%; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 880px) {
+        header { padding: 12px 16px; }
+        .main { grid-template-columns: 1fr; }
+        .left-panel {
+            position: sticky; top: 63px; border-right: none;
+            border-bottom: 1px solid var(--border);
+            max-height: none; gap: 12px;
+            background: rgba(250,247,242,0.95); backdrop-filter: blur(10px); z-index: 9;
+        }
+        .album-summaries { display: none; }
+        .left-panel .panel-label.lines-lbl { display: none; }
+        .right-panel { padding: 16px 14px 50px; }
+        .albums-grid { grid-template-columns: 1fr; gap: 14px; }
+        .global-timer { font-size: 1.4em; }
+    }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+    <div class="header-left">
+        <a href="index.html" style="text-decoration: none; color: var(--text); display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-weight: bold; font-size: 1.1em; box-shadow: 0 2px 8px rgba(40,30,20,0.06); transition: all 0.2s;" onmouseover="this.style.transform='translateX(-2px)'" onmouseout="this.style.transform='none'" title="Back to Arcade Home">←</a>
+        
+        <div class="logo-icon">🎵</div>
+        <div>
+            <h1>Taylor Swift Discography Quiz</h1>
+            <div class="subtitle">Studio Albums</div>
+        </div>
+    </div>
+    <div class="header-right">
+        <div class="global-timer-wrap">
+            <div class="global-timer-label">Elapsed</div>
+            <div class="global-timer" id="globalTimer">0:00</div>
+        </div>
+    </div>
+</header>
+
+    <div class="main">
+
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+            <div>
+                <div class="panel-label">Name a song</div>
+                <input type="text" id="songInput" placeholder="Type any track title…" autocomplete="off">
+                <div style="margin-top:8px"><div class="feedback" id="feedback"></div></div>
+            </div>
+
+            <div>
+                <div class="panel-label">Score</div>
+                <div class="score-grid">
+                    <div class="score-card">
+                        <div class="score-card-label">Found</div>
+                        <div class="score-card-num" id="totalScore">0</div>
+                    </div>
+                    <div class="score-card">
+                        <div class="score-card-label">Left</div>
+                        <div class="score-card-num" id="remaining">0</div>
+                    </div>
+                    <div class="score-card" style="grid-column: span 2; background: #f8f1dd; border-color: rgba(195,154,46,0.25);">
+                        <div class="score-card-label" style="color:#a37f1e">Hints Used</div>
+                        <div class="score-card-num" id="hintCount" style="color:#a37f1e">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="panel-label lines-lbl">Albums</div>
+                <div class="album-summaries" id="albumSummaries"></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" id="submitBtn">Submit</button>
+                <button class="btn btn-danger" id="giveUpBtn">Give Up &amp; Reveal</button>
+                <button class="btn btn-secondary" id="resetBtn">Reset Quiz</button>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+            <div class="albums-grid" id="albumsGrid"></div>
+        </div>
+    </div>
+</div>
+
+<!-- START OVERLAY -->
+<div class="start-overlay" id="startOverlay">
+    <div class="start-card">
+        <h2>🎤 Ready to play?</h2>
+        <p>Name every track across Taylor Swift's twelve studio albums — debut through <em>The Life of a Showgirl</em> — including the deluxe and From&nbsp;the&nbsp;Vault tracks. The clock starts when you do.</p>
+        <div class="era-dots" id="eraDots"></div>
+        <button class="btn btn-primary" id="startBtn" style="width:100%;padding:13px;font-size:0.9em">Start Quiz</button>
+    </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="endModal">
+    <div class="modal-content">
+        <h2 id="modalTitle">Game Over</h2>
+        <div class="modal-sub" id="modalSub"></div>
+        <div class="final-score" id="finalScore">0</div>
+        <div class="final-message" id="finalMessage"></div>
+        <div class="final-breakdown" id="finalBreakdown"></div>
+        <button class="btn btn-primary" onclick="location.reload()" style="width:100%;padding:12px">Play Again</button>
+    </div>
+</div>
+
+<script>
+    // ── Album + track data ───────────────────────────────────────────────
+    const albums = [
+        {
+            key: "debut", name: "Taylor Swift", badge: "TS", meta: "Debut · 2006",
+            accent: "#4a9d6b", accentSoft: "#e7f3ec",
+            tracks: ["Tim McGraw","Picture to Burn","Teardrops on My Guitar","A Place in This World","Cold as You","The Outside","Tied Together with a Smile","Stay Beautiful","Should've Said No","Mary's Song (Oh My My My)","Our Song","I'm Only Me When I'm with You","Invisible","A Perfectly Good Heart"]
+        },
+        {
+            key: "fearless", name: "Fearless", badge: "FL", meta: "2008 · Platinum + Vault",
+            accent: "#c39a2e", accentSoft: "#f8f1dd",
+            tracks: ["Fearless","Fifteen","Love Story","Hey Stephen","White Horse","You Belong with Me","Breathe","Tell Me Why","You're Not Sorry","The Way I Loved You","Forever & Always","The Best Day","Change","Jump Then Fall","Untouchable","Come In with the Rain","Superstar","The Other Side of the Door","Today Was a Fairytale","You All Over Me","Mr. Perfectly Fine","We Were Happy","That's When","Don't You","Bye Bye Baby"]
+        },
+        {
+            key: "speakNow", name: "Speak Now", badge: "SN", meta: "2010 · Deluxe + Vault",
+            accent: "#8a5fb0", accentSoft: "#f1eaf7",
+            tracks: ["Mine","Sparks Fly","Back to December","Speak Now","Dear John","Mean","The Story of Us","Never Grow Up","Enchanted","Better Than Revenge","Innocent","Haunted","Last Kiss","Long Live","Ours","Superman","If This Was a Movie","Electric Touch","When Emma Falls in Love","I Can See You","Castles Crumbling","Foolish One","Timeless"]
+        },
+        {
+            key: "red", name: "Red", badge: "R", meta: "2012 · Deluxe + Vault",
+            accent: "#c8392b", accentSoft: "#fae6e3",
+            tracks: ["State of Grace","Red","Treacherous","I Knew You Were Trouble","All Too Well","22","I Almost Do","We Are Never Ever Getting Back Together","Stay Stay Stay","The Last Time","Holy Ground","Sad Beautiful Tragic","The Lucky One","Everything Has Changed","Starlight","Begin Again","The Moment I Knew","Come Back... Be Here","Girl at Home","Better Man","Nothing New","Babe","Message in a Bottle","I Bet You Think About Me","Forever Winter","Run","The Very First Night","All Too Well (10 Minute Version)"]
+        },
+        {
+            key: "i1989", name: "1989", badge: "89", meta: "2014 · Deluxe + Vault",
+            accent: "#3a8fc4", accentSoft: "#e4f1f9",
+            tracks: ["Welcome to New York","Blank Space","Style","Out of the Woods","All You Had to Do Was Stay","Shake It Off","I Wish You Would","Bad Blood","Wildest Dreams","How You Get the Girl","This Love","I Know Places","Clean","Wonderland","You Are in Love","New Romantics","Slut!","Say Don't Go","Now That We Don't Talk","Suburban Legends","Is It Over Now?"]
+        },
+        {
+            key: "reputation", name: "reputation", badge: "rep", meta: "2017",
+            accent: "#4a4a52", accentSoft: "#ececed",
+            tracks: ["...Ready for It?","End Game","I Did Something Bad","Don't Blame Me","Delicate","So It Goes...","Look What You Made Me Do","Gorgeous","Getaway Car","King of My Heart","Dancing with Our Hands Tied","Dress","This Is Why We Can't Have Nice Things","Call It What You Want","New Year's Day"]
+        },
+        {
+            key: "lover", name: "Lover", badge: "LV", meta: "2019",
+            accent: "#e07ba8", accentSoft: "#fce9f1",
+            tracks: ["I Forgot That You Existed","Cruel Summer","Lover","The Man","The Archer","I Think He Knows","Miss Americana & the Heartbreak Prince","Paper Rings","Cornelia Street","Death by a Thousand Cuts","London Boy","Soon You'll Get Better","False God","You Need to Calm Down","Afterglow","ME!","It's Nice to Have a Friend","Daylight"]
+        },
+        {
+            key: "folklore", name: "folklore", badge: "fk", meta: "2020 · Deluxe",
+            accent: "#6f7c7a", accentSoft: "#ecefee",
+            tracks: ["the 1","cardigan","the last great american dynasty","exile","my tears ricochet","mirrorball","seven","august","this is me trying","illicit affairs","invisible string","mad woman","epiphany","betty","peace","hoax","the lakes"]
+        },
+        {
+            key: "evermore", name: "evermore", badge: "ev", meta: "2020 · Deluxe",
+            accent: "#b5651d", accentSoft: "#f7ebdd",
+            tracks: ["willow","champagne problems","gold rush","'tis the damn season","tolerate it","no body, no crime","happiness","dorothea","coney island","ivy","cowboy like me","long story short","marjorie","closure","evermore","right where you left me","it's time to go"]
+        },
+        {
+            key: "midnights", name: "Midnights", badge: "M", meta: "2022 · 3am + extras",
+            accent: "#4753a6", accentSoft: "#e8eaf6",
+            tracks: ["Lavender Haze","Maroon","Anti-Hero","Snow on the Beach","You're on Your Own, Kid","Midnight Rain","Question...?","Vigilante Shit","Bejeweled","Labyrinth","Karma","Sweet Nothing","Mastermind","The Great War","Bigger Than the Whole Sky","Paris","High Infidelity","Glitch","Would've, Could've, Should've","Dear Reader","Hits Different","You're Losing Me"]
+        },
+        {
+            key: "ttpd", name: "The Tortured Poets Department", badge: "TTPD", meta: "2024 · The Anthology",
+            accent: "#8a7f6b", accentSoft: "#efece4",
+            tracks: ["Fortnight","The Tortured Poets Department","My Boy Only Breaks His Favorite Toys","Down Bad","So Long, London","But Daddy I Love Him","Fresh Out the Slammer","Florida!!!","Guilty as Sin?","Who's Afraid of Little Old Me?","I Can Fix Him (No Really I Can)","loml","I Can Do It with a Broken Heart","The Smallest Man Who Ever Lived","The Alchemy","Clara Bow","The Black Dog","imgonnagetyouback","The Albatross","Chloe or Sam or Sophia or Marcus","How Did It End?","So High School","I Hate It Here","thanK you aIMee","I Look in People's Windows","The Prophecy","Cassandra","Peter","The Bolter","Robin","The Manuscript"]
+        },
+        {
+            key: "showgirl", name: "The Life of a Showgirl", badge: "TLS", meta: "2025",
+            accent: "#e08a1e", accentSoft: "#fcefdb",
+            tracks: ["The Fate of Ophelia","Elizabeth Taylor","Opalite","Father Figure","Eldest Daughter","Ruin the Friendship","Actually Romantic","Wi$h Li$t","Wood","Cancelled!","Honey","The Life of a Showgirl"]
+        }
+    ];
+
+    // ── Normalization (forgiving matcher) ────────────────────────────────
+    const normalize = s => s.toLowerCase()
+        .replace(/&/g, ' and ')
+        .replace(/\$/g, 's')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const stripSpaces = s => s.replace(/ /g, '');
+
+    // ── Build lookup index ───────────────────────────────────────────────
+    const byKey = {};                 // key -> album
+    const trackList = [];             // {album, title, norm, noSpace}
+    albums.forEach(a => {
+        byKey[a.key] = a;
+        a.tracks.forEach(title => {
+            const norm = normalize(title);
+            trackList.push({ albumKey: a.key, title, norm, noSpace: stripSpaces(norm) });
+        });
+    });
+    const TOTAL = trackList.length;
+
+    // ── Game state ───────────────────────────────────────────────────────
+    let guessed = new Set();          // normalized titles found
+    let gameActive = false;
+    let gameStarted = false;
+    let globalSeconds = 0;
+    let albumSeconds = {};
+    let albumDone = {};
+    albums.forEach(a => { albumSeconds[a.key] = 0; albumDone[a.key] = false; });
+    const hintState = {};             // norm -> hint level
+    let totalHints = 0;
+
+    const fmt = s => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+
+    // ── Hint text ──────────────────────────────────────────────────────────
+    // level 0 hidden · level 1 all underscores · level 2+ reveal (level-1) letters
+    function getHintText(title, level) {
+        if (level <= 0) return title;
+        const reveal = Math.max(0, level - 1);
+        let letterIdx = 0;
+        return Array.from(title).map(c => {
+            if (/[a-z0-9]/i.test(c)) {
+                const show = letterIdx < reveal;
+                letterIdx++;
+                return show ? c : '_';
+            }
+            return c; // keep spaces & punctuation visible
+        }).join('');
+    }
+
+    function useHint(norm, tagEl) {
+        if (!gameActive || guessed.has(norm)) return;
+        const t = trackList.find(t => t.norm === norm);
+        if (!t) return;
+        const maxLevel = 1 + Array.from(t.title).filter(c => /[a-z0-9]/i.test(c)).length;
+        if ((hintState[norm] || 0) >= maxLevel) return;
+        hintState[norm] = (hintState[norm] || 0) + 1;
+        totalHints++;
+        document.getElementById('hintCount').textContent = totalHints;
+        const textEl = tagEl.querySelector('.song-text');
+        textEl.textContent = getHintText(t.title, hintState[norm]);
+        tagEl.classList.add('hinted');
+    }
+
+    // ── Build the board ──────────────────────────────────────────────────
+    function buildBoard() {
+        const grid = document.getElementById('albumsGrid');
+        const summaries = document.getElementById('albumSummaries');
+        const eraDots = document.getElementById('eraDots');
+
+        albums.forEach(a => {
+            // era dot in start overlay
+            const dot = document.createElement('div');
+            dot.className = 'era-dot';
+            dot.style.background = a.accent;
+            dot.title = a.name;
+            eraDots.appendChild(dot);
+
+            // left-panel summary row
+            const sum = document.createElement('div');
+            sum.className = 'album-summary';
+            sum.id = `sum-${a.key}`;
+            sum.style.setProperty('--accent', a.accent);
+            sum.innerHTML = `
+                <div class="summary-dot"></div>
+                <div class="summary-name">${a.name}</div>
+                <div class="summary-count"><span id="sumCount-${a.key}">0</span>/${a.tracks.length}</div>
+                <div class="summary-timer" id="sumTimer-${a.key}">0:00</div>`;
+            summaries.appendChild(sum);
+
+            // album card
+            const card = document.createElement('div');
+            card.className = 'album-card';
+            card.style.setProperty('--accent', a.accent);
+            card.style.setProperty('--accent-soft', a.accentSoft);
+            card.innerHTML = `
+                <div class="album-header">
+                    <div class="album-badge">${a.badge}</div>
+                    <div class="album-header-info">
+                        <div class="album-title">${a.name}</div>
+                        <div class="album-meta"><span id="hdrCount-${a.key}">0</span>/${a.tracks.length} · ${a.meta}</div>
+                    </div>
+                    <div class="album-timer" id="cardTimer-${a.key}">0:00</div>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="bar-${a.key}"></div></div>
+                <div class="songs-list" id="list-${a.key}"></div>`;
+            grid.appendChild(card);
+
+            // song tags
+            const list = card.querySelector(`#list-${a.key}`);
+            a.tracks.forEach(title => {
+                const norm = normalize(title);
+                const tag = document.createElement('div');
+                tag.className = 'song-tag';
+                tag.dataset.norm = norm;
+
+                const textEl = document.createElement('span');
+                textEl.className = 'song-text';
+                textEl.textContent = title; // hidden by transparent color
+                tag.appendChild(textEl);
+
+                const hintBtn = document.createElement('button');
+                hintBtn.className = 'hint-btn';
+                hintBtn.type = 'button';
+                hintBtn.title = 'Reveal a letter';
+                hintBtn.textContent = '?';
+                hintBtn.addEventListener('click', e => { e.stopPropagation(); useHint(norm, tag); });
+                tag.appendChild(hintBtn);
+
+                list.appendChild(tag);
+            });
+        });
+    }
+
+    // ── Reveal a guessed song (handles same title on >1 album) ───────────
+    function revealGuessed(norm) {
+        document.querySelectorAll('.song-tag').forEach(tag => {
+            if (tag.dataset.norm === norm && !tag.classList.contains('guessed')) {
+                const t = trackList.find(x => x.norm === norm);
+                const textEl = tag.querySelector('.song-text');
+                if (t) textEl.textContent = t.title;
+                tag.classList.remove('hinted');
+                tag.classList.add('guessed', 'new');
+                setTimeout(() => tag.classList.remove('new'), 400);
+            }
+        });
+    }
+
+    // ── Progress + score ─────────────────────────────────────────────────
+    function updateProgress() {
+        let found = 0;
+        albums.forEach(a => {
+            const c = a.tracks.filter(t => guessed.has(normalize(t))).length;
+            found += c;
+            document.getElementById(`sumCount-${a.key}`).textContent = c;
+            document.getElementById(`hdrCount-${a.key}`).textContent = c;
+            document.getElementById(`bar-${a.key}`).style.width = (c / a.tracks.length * 100) + '%';
+        });
+        document.getElementById('totalScore').textContent = guessed.size;
+        document.getElementById('remaining').textContent = TOTAL - guessed.size;
+    }
+
+    function checkCompletion() {
+        albums.forEach(a => {
+            if (!albumDone[a.key] && a.tracks.every(t => guessed.has(normalize(t)))) {
+                albumDone[a.key] = true;
+                document.getElementById(`sum-${a.key}`).classList.add('done');
+                document.getElementById(`cardTimer-${a.key}`).classList.add('done');
+            }
+        });
+        if (albums.every(a => albumDone[a.key])) endGame(true);
+    }
+
+    // ── Submit a guess ──────────────────────────────────────────────────
+    function submitGuess() {
+        if (!gameActive) return;
+        const input = document.getElementById('songInput');
+        const raw = input.value.trim();
+        if (!raw) return;
+        const feedback = document.getElementById('feedback');
+        const g = normalize(raw);
+        const gNoSpace = stripSpaces(g);
+
+        const match = trackList.find(t => t.norm === g || t.noSpace === gNoSpace);
+
+        if (match && guessed.has(match.norm)) {
+            feedback.className = 'feedback show incorrect';
+            feedback.textContent = '✓ Already found that one!';
+        } else if (match) {
+            guessed.add(match.norm);
+            feedback.className = 'feedback show correct';
+            feedback.textContent = `✓ ${match.title} — ${byKey[match.albumKey].name}`;
+            revealGuessed(match.norm);
+            updateProgress();
+            checkCompletion();
+        } else {
+            feedback.className = 'feedback show incorrect';
+            feedback.textContent = '✗ Not a track in this game';
+        }
+        input.value = '';
+        input.focus();
+    }
+
+    // ── Timers ──────────────────────────────────────────────────────────
+    function startTimers() {
+        setInterval(() => {
+            if (!gameStarted || !gameActive) return;
+            globalSeconds++;
+            document.getElementById('globalTimer').textContent = fmt(globalSeconds);
+            albums.forEach(a => {
+                if (!albumDone[a.key]) {
+                    albumSeconds[a.key]++;
+                    const ts = fmt(albumSeconds[a.key]);
+                    document.getElementById(`cardTimer-${a.key}`).textContent = ts;
+                    document.getElementById(`sumTimer-${a.key}`).textContent = ts;
+                }
+            });
+        }, 1000);
+    }
+
+    // ── Start / give up / end ────────────────────────────────────────────
+    function startGame() {
+        gameStarted = true; gameActive = true;
+        document.getElementById('startOverlay').style.display = 'none';
+        const input = document.getElementById('songInput');
+        input.disabled = false;
+        document.getElementById('submitBtn').disabled = false;
+        input.focus();
+    }
+
+    function giveUp() {
+        if (!gameActive) return;
+        if (!confirm('Give up and reveal every remaining track?')) return;
+        gameActive = false;
+        endGame(false);
+    }
+
+    function endGame(completed) {
+        gameActive = false;
+        document.getElementById('songInput').disabled = true;
+        document.getElementById('submitBtn').disabled = true;
+
+        // reveal misses
+        document.querySelectorAll('.song-tag').forEach(tag => {
+            if (!tag.classList.contains('guessed')) {
+                const t = trackList.find(x => x.norm === tag.dataset.norm);
+                if (t) tag.querySelector('.song-text').textContent = t.title;
+                tag.classList.remove('hinted');
+                tag.classList.add('missed');
+            }
+        });
+
+        const score = guessed.size;
+        const pct = Math.round(score / TOTAL * 100);
+        document.getElementById('modalTitle').textContent = completed ? '🌟 Discography complete!' : 'Game Over';
+        document.getElementById('modalSub').textContent = `${fmt(globalSeconds)} · ${totalHints} hint${totalHints !== 1 ? 's' : ''} used`;
+        document.getElementById('finalScore').textContent = `${score} / ${TOTAL}`;
+
+        let msg;
+        if (pct === 100) msg = "Mastermind. Every era, every track — flawless.";
+        else if (pct >= 85) msg = "A true Swiftie. Barely a song missed.";
+        else if (pct >= 65) msg = "Strong run — you know the catalogue well.";
+        else if (pct >= 40) msg = "Solid effort. A few vault tracks slipped by.";
+        else msg = "Long live the replay — give it another spin!";
+        document.getElementById('finalMessage').textContent = msg;
+
+        const bd = document.getElementById('finalBreakdown');
+        bd.innerHTML = '';
+        albums.forEach(a => {
+            const c = a.tracks.filter(t => guessed.has(normalize(t))).length;
+            const done = albumDone[a.key];
+            const row = document.createElement('div');
+            row.className = 'final-row';
+            row.innerHTML = `
+                <div class="final-dot" style="background:${a.accent}"></div>
+                <div class="final-name">${a.name}</div>
+                <div class="final-stat ${done ? 'complete' : ''}">${done ? '✓ ' + fmt(albumSeconds[a.key]) : c + '/' + a.tracks.length}</div>`;
+            bd.appendChild(row);
+        });
+
+        document.getElementById('endModal').classList.add('active');
+    }
+
+    function resetQuiz() { if (confirm('Reset? Your progress will be lost.')) location.reload(); }
+
+    // ── Init ────────────────────────────────────────────────────────────
+    function init() {
+        buildBoard();
+        updateProgress();
+        startTimers();
+        const input = document.getElementById('songInput');
+        input.disabled = true;
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('submitBtn').addEventListener('click', submitGuess);
+        input.addEventListener('keypress', e => { if (e.key === 'Enter') submitGuess(); });
+        document.getElementById('giveUpBtn').addEventListener('click', giveUp);
+        document.getElementById('resetBtn').addEventListener('click', resetQuiz);
+    }
+
+    init();
+</script>
+</body>
+</html>

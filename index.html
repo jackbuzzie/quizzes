@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizzes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fa;
+            --surface: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #6c757d;
+            --border: rgba(0, 0, 0, 0.08);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            
+            /* Game Themes */
+            --train-color: #F99D1C;
+            --taylor-color: #9c80a6;
+            --mountains-color: #3f7894;
+            --beaches-color: #2b8fa3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+
+        header {
+            margin-bottom: 3.5rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+        }
+
+        /* Train Game Card Specifics */
+        .card.train::before {
+            background: var(--train-color);
+        }
+        .card.train .badge {
+            background: rgba(249, 157, 28, 0.1);
+            color: #d17b05;
+        }
+
+        /* Taylor Game Card Specifics */
+        .card.taylor::before {
+            background: var(--taylor-color);
+        }
+        .card.taylor .badge {
+            background: rgba(156, 128, 166, 0.1);
+            color: #765980;
+        }
+
+        /* Blue Mountains + Beaches Card Specifics */
+        .card.mountains::before { background: var(--mountains-color); }
+        .card.mountains .badge { background: rgba(63, 120, 148, 0.1); color: #2f5d73; }
+        .card.mountains .btn-play { color: var(--mountains-color); }
+        .card.beaches::before { background: var(--beaches-color); }
+        .card.beaches .badge { background: rgba(43, 143, 163, 0.1); color: #1f6e7e; }
+        .card.beaches .btn-play { color: var(--beaches-color); }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        .badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.01em;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+        }
+
+        .btn-play {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+            gap: 0.5rem;
+            transition: transform 0.2s ease;
+        }
+
+        .card.train .btn-play { color: var(--train-color); }
+        .card.taylor .btn-play { color: var(--taylor-color); }
+
+        .card:hover .btn-play {
+            transform: translateX(4px);
+        }
+
+        .btn-play svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 1rem; }
+            header { margin-bottom: 2rem; }
+            header h1 { font-size: 2rem; }
+            .card { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>My Quizzes</h1>
+            <p>Select a quiz to test your knowledge</p>
+        </header>
+
+        <main class="grid">
+            <a href="train-game.html" class="card train">
+                <div class="badge">Transit</div>
+                <h2>Sydney Rail Network Map Quiz</h2>
+                <p>Test your transit skills! Guess the stations on the Sydney rail network map before the timer runs out.</p>
+                <div class="btn-play">
+                    Play Game 
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <a href="taylor_discography_game.html" class="card taylor">
+                <div class="badge">Music</div>
+                <h2>Taylor Swift Discography Quiz</h2>
+                <p>Are you a true Swiftie? Name as many tracks as you can from her studio albums against the clock.</p>
+                <div class="btn-play">
+                    Play Game 
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+            <a href="blue_mountains_game.html" class="card mountains">
+                <div class="badge">Geography</div>
+                <h2>Blue Mountains Suburbs Quiz</h2>
+                <p>Head up the highway! Name every suburb from the foot of the range to the top.</p>
+                <div class="btn-play">
+                    Play Game 
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+
+            <a href="northern_beaches_game.html" class="card beaches">
+                <div class="badge">Geography</div>
+                <h2>Northern Beaches Quiz</h2>
+                <p>Hit the coast! Name every major Northern Beaches ocean beach, north to south.</p>
+                <div class="btn-play">
+                    Play Game 
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </div>
+            </a>
+        </main>
+    </div>
+
+</body>
+</html>
